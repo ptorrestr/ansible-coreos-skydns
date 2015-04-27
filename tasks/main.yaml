@@ -1,0 +1,48 @@
+---
+- name: Create Units directory
+  file: path="{{ playbook_dir }}/units state=directory"
+  tags:
+    - configuration
+
+# Prerequisities
+# ssh access to machine
+# fleetctl available on $PATH
+# key used in tunnel in ssh-agent
+- name: Gather fleet machines info
+  get_coreos_machines: tunnel={{ fleet_endpoint }}
+  register: fleetctl_hosts
+  tags:
+    - configuration
+    - coreos_registry
+
+- name: Find dns host
+  choose_registry_machine: IPS="{{ item['IPS'] }}" IDS="{{ item['IDS'] }}"
+  register: dns_host
+  with_items:
+    - "{{ fleetctl_hosts['stdout'] }}"
+  tags:
+    - configuration
+    - coreos_registry
+  notify:
+    - Write registry IP to coreos servers
+    - Write registry IP locally
+
+# Create unit
+- name: Create DNS Units
+  template: src=dns.service.j2 dest={{ playbook_dir }}/units/dns.service
+  tags:
+    - configuration
+- name: Submit DNS units
+  shell: "fleetctl --tunnel {{ fleet_endpoint }} submit {{ playbook_dir }}/units/{{ item }}"
+  with_items:
+    - "dns.service"
+  tags:
+    - fleet_submit
+    - fleet_submit_registry
+- name: Start DNS units
+  shell: "fleetctl --tunnel {{ fleet_endpoint }} start {{ item }}"
+  with_items:
+    - "dns.service"
+  tags:
+    - fleet_start
+    - fleet_start_registry
