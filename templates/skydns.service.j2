@@ -10,14 +10,15 @@ KillMode=none
 TimeoutStartSec=360
 TimeoutStopSec=360
 EnvironmentFile=/etc/environment
-ExecStartPre=/usr/bin/docker pull crosbymichael/skydns
+ExecStartPre=/usr/bin/docker pull skynetservices/skydns
 ExecStartPre=-/usr/bin/docker rm -f %p
-ExecStartPre=/usr/bin/docker create -it --name %p -p 53:53/udp -e HOST_IP=${COREOS_PUBLIC_IPV4} -nameserver 8.8.8.8:53 -domain local
+ExecStartPre=/usr/bin/etcdctl set /skydns/config '{"dns_addr":"${COREOS_PUBLIC_IPV4}:53", "domain":"local", "nameservers":["8.8.8.8:53"]}'
+ExecStartPre=/usr/bin/docker create -it --name %p -p 53:53 -p 53:53/udp --net=host -e ETCD_MACHINES=${COREOS_PUBLIC_IPV4}:4001 skynetservices/skydns 
 ExecStart=/usr/bin/docker start -a %p
 ExecStop=/usr/bin/docker stop -t 60 %p
 ExecStopPost=-/usr/bin/docker rm -f %p
+ExecStopPost=/usr/bin/etcdctl rm /skydns/config
 Restart=on-failure
 
 [X-Fleet]
-Conflicts=%p.service
 MachineID={{ dns_host.results[0].ID }}

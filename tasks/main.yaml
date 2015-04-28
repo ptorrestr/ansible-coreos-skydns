@@ -1,8 +1,8 @@
----
-- name: Create Units directory
-  file: path="{{ playbook_dir }}/units state=directory"
-  tags:
-    - configuration
+#---
+#- name: Create Units directory
+#  file: path="{{ playbook_dir }}/units state=directory"
+#  tags:
+#    - configuration
 
 # Prerequisities
 # ssh access to machine
@@ -24,25 +24,25 @@
     - configuration
     - coreos_registry
   notify:
-    - Write registry IP to coreos servers
-    - Write registry IP locally
+    - Write DNS IP to coreos servers
+    - Write DNS IP locally
 
 # Create unit
 - name: Create DNS Units
-  template: src=dns.service.j2 dest={{ playbook_dir }}/units/dns.service
+  template: src=skydns.service.j2 dest={{ playbook_dir }}/units/skydns.service
   tags:
     - configuration
 - name: Submit DNS units
   shell: "fleetctl --tunnel {{ fleet_endpoint }} submit {{ playbook_dir }}/units/{{ item }}"
   with_items:
-    - "dns.service"
+    - "skydns.service"
   tags:
     - fleet_submit
     - fleet_submit_registry
 - name: Start DNS units
   shell: "fleetctl --tunnel {{ fleet_endpoint }} start {{ item }}"
   with_items:
-    - "dns.service"
+    - "skydns.service"
   tags:
     - fleet_start
     - fleet_start_registry

@@ -5,4 +5,4 @@
     - "{{ groups['coreos'] }}"
 
 - name: Write DNS IP locally
-  shell: if [ $(grep {{ dev_hostname }} /etc/hosts | wc -l) -gt 0 ]; then sudo sed -i 's/.*{{ dns_hostname }}.*/{{ dns_host.results[0].IP }} {{ dns_hostname }}/g' /etc/hosts; else echo "{{ dns_host.results[0].IP }} {{ dns_hostname }}" | sudo tee --append /etc/hosts 1>/dev/null ;fi
+  shell: if [ $(grep {{ dns_hostname }} /etc/hosts | wc -l) -gt 0 ]; then sudo sed -i 's/.*{{ dns_hostname }}.*/{{ dns_host.results[0].IP }} {{ dns_hostname }}/g' /etc/hosts; else echo "{{ dns_host.results[0].IP }} {{ dns_hostname }}" | sudo tee --append /etc/hosts 1>/dev/null ;fi
