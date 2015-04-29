@@ -3,21 +3,15 @@
 #  file: path="{{ playbook_dir }}/units state=directory"
 #  tags:
 #    - configuration
-
-# Prerequisities
-# ssh access to machine
-# fleetctl available on $PATH
-# key used in tunnel in ssh-agent
 - name: Gather fleet machines info
-  get_coreos_machines: tunnel={{ fleet_endpoint }}
+  get_coreos_machines:
   register: fleetctl_hosts
   tags:
     - configuration
     - coreos_registry
-
 - name: Find dns host
   choose_registry_machine: IPS="{{ item['IPS'] }}" IDS="{{ item['IDS'] }}"
-  register: dns_host
+  register: m_dns_host
   with_items:
     - "{{ fleetctl_hosts['stdout'] }}"
   tags:
@@ -33,14 +27,14 @@
   tags:
     - configuration
 - name: Submit DNS units
-  shell: "fleetctl --tunnel {{ fleet_endpoint }} submit {{ playbook_dir }}/units/{{ item }}"
+  shell: "fleetctl submit {{ playbook_dir }}/units/{{ item }}"
   with_items:
     - "skydns.service"
   tags:
     - fleet_submit
     - fleet_submit_registry
 - name: Start DNS units
-  shell: "fleetctl --tunnel {{ fleet_endpoint }} start {{ item }}"
+  shell: "fleetctl start {{ item }}"
   with_items:
     - "skydns.service"
   tags:

@@ -1,8 +1,7 @@
 ---
 - name: Write DNS IP to coreos servers
-  shell: ssh {{ coreos_ssh_user }}@{{ hostvars[item]['ansible_ssh_host'] }} -p {{ hostvars[item]['ansible_ssh_port'] }} -i {{ coreos_ssh_key }} "if [ \$(grep {{ dns_hostname }} /etc/hosts | wc -l) -gt 0 ]; then sudo sed -i 's/.*{{ dns_hostname }}.*/{{ dns_host.results[0].IP }} {{ dns_hostname }}/g' /etc/hosts; else echo \"{{ dns_host.results[0].IP }} {{ dns_hostname }}\" | sudo tee --append /etc/hosts 1>/dev/null ;fi"
-  with_items:
-    - "{{ groups['coreos'] }}"
+  shell: fleetctl ssh {{ item }} "if [ \$(grep {{ dns_host }} /etc/hosts | wc -l) -gt 0 ]; then sudo sed -i 's/.*{{ dns_host }}.*/{{ m_dns_host.results[0].IP }} {{ dns_host }}/g' /etc/hosts; else echo \"{{ m_dns_host.results[0].IP }} {{ dns_host }}\" | sudo tee --append /etc/hosts 1>/dev/null ;fi"
+  with_items: m_dns_host.results[0].item.IDS
 
 - name: Write DNS IP locally
-  shell: if [ $(grep {{ dns_hostname }} /etc/hosts | wc -l) -gt 0 ]; then sudo sed -i 's/.*{{ dns_hostname }}.*/{{ dns_host.results[0].IP }} {{ dns_hostname }}/g' /etc/hosts; else echo "{{ dns_host.results[0].IP }} {{ dns_hostname }}" | sudo tee --append /etc/hosts 1>/dev/null ;fi
+  shell: if [ $(grep {{ dns_host }} /etc/hosts | wc -l) -gt 0 ]; then sudo sed -i 's/.*{{ dns_host }}.*/{{ m_dns_host.results[0].IP }} {{ dns_host }}/g' /etc/hosts; else echo "{{ m_dns_host.results[0].IP }} {{ dns_host }}" | sudo tee --append /etc/hosts 1>/dev/null ;fi
